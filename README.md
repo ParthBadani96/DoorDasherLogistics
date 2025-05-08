@@ -21,6 +21,19 @@ Hypothesis
 ETA delays can be predicted using dasher load, weather, and store order characteristics
 With the right features and ML models, we can preemptively identify high-risk delivery windows
 
+🧪 Hypothesis Formulation
+We hypothesize that:
+
+ETA is significantly longer during peak hours.
+
+ETA rises with bad weather (rain/mist) and wind speed.
+
+Grocery orders and high dasher stress index are critical predictors of late deliveries.
+
+These factors can be modeled to trigger preemptive surge relief actions.
+
+
+
 Synthetic Dataset Creation (Python)
 
 Purpose
