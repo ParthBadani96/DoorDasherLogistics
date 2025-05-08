@@ -840,4 +840,280 @@ df_final_ready["ETA_BUCKET"] = pd.cut(
 df_final_ready.to_csv("doordash_100k_dashboard.csv", index=False)
 
 
+🧠 Key Insight from LightGBM Feature Importance:
+Top features influencing ETA:
+
+DASHER_STRESS_INDEX
+
+STORE_TYPE
+
+TOTAL_ITEMS
+
+HOUR_OF_DAY
+
+WEATHER_MAIN
+
+📈 Power BI Dashboard (3 Pages)
+✅ Page 1: Surge Patterns & Delay Risk
+Heatmap: Surge load by hour/city
+
+Line: Avg ETA by weekday (Wednesday spike)
+
+Gauge: 5.2% late risk → above threshold
+
+Bar: Surge vs Non-Surge ETA (2.5k vs 1.5k sec)
+
+🧠 Takeaway: Surge zones must be modeled + actioned hourly. Surge adds real latency.
+
+✅ Page 2: Grocery vs Restaurant Complexity
+Violin Plot: Grocery delivery more volatile
+
+Bar: Grocery items = exponential delay rise
+
+Combo Chart: Evening grocery = >32 mins ETA
+
+Donut: 6% orders breach 45 mins
+
+🧠 Takeaway: Grocery requires SLA partitioning, prep efficiency gains, and batching logic.
+
+✅ Page 3: Weather & Operational Stress
+Stacked Bar: Weather vs ETA buckets
+
+Line: Wind Speed → +4 min ETA rise
+
+Scatter (Bubble): Dasher Stress Index vs Outstanding Orders
+
+🧠 Takeaway: Rain surges add 68% delivery time; stress indicators can forecast breakdowns.
+
+📊 Executive Insights Summary
+Theme	Insight	Strategy
+Surge Delay	Wednesdays, 6–8PM worst	Dynamic surge caps + smart rerouting
+Grocery Volatility	High ETA spread & item correlation	Segment SLAs, dispatch earlier
+Dasher Stress	Strong ETA linkage	Predict & intervene with early signals
+Weather	Rain = 1.68× ETA	Weather-aware pay & CX alerts
+Wind	Adds 2–4 mins	Bundle & pre-position dashers
+
+📅 Next Steps & Timeline
+Phase	Description	Timeline
+✅ Simulation & Enrichment	Complete	✅ April Week 1
+✅ Feature Engineering	Snowflake ETL + SQL	✅ April Week 2
+✅ Modeling & Testing	Python + LightGBM	✅ April Week 2
+✅ Power BI Dashboard	Full delivery risk map	✅ April Week 3
+📤 Embed + Stakeholder Review	Distribute insights	April Week 4
+🚀 Pilot Smart Routing	Begin pilot in 2 cities	May 2025
+📈 Real-Time Forecast	Deploy model to ops UI	June 2025
+
+Data Driven Strategy Implementation
+
+🔺 1. Surge Smart Routing + Proactive Zone Staffing
+📊 Based On:
+Page 1 Heatmap: "Surge Load by Hour & Market"
+
+Gauge: “Late Risk Orders = 5.2%”
+
+Bar: “ETA is 2.5k sec during Surge vs 1.5k Non-Surge”
+
+🚀 Strategy:
+Implement dynamic surge policy caps + smart routing in high-surge zones. Use hourly surge intensity to pre-position dashers in LA, Houston, Philly during 6–9PM on Wed–Fri.
+
+Deploy a predictive model that forecasts high-stress windows (using DASHER_STRESS_INDEX + MARKET + SURGE_LABEL) and rebalances Dasher heatmaps before surge begins.
+
+📈 Expected Outcome:
+📉 Late Risk % drops from 5.2% → ~3.5% within 2 weeks in pilot cities
+
+📉 Reduced customer complaints during surge by 15–20%
+
+📉 Reduced unnecessary surge payouts by 8–10%
+
+🕒 Timeline:
+2 weeks post-implementation in 3 pilot markets
+
+
+🛒 2. Segmented SLA Tiers for Grocery vs Restaurant
+📊 Based On:
+Page 2 Violin Plot: Grocery has higher ETA variance
+
+Item Count Bar Chart: 16+ item grocery = 38 mins
+
+Grocery Delay Penalty: +3.8 minutes on avg
+
+🚀 Strategy:
+Introduce custom SLA windows:
+
+Grocery: 35-min default
+
+Restaurant: 25-min default
+
+Enable dynamic batching logic:
+
+Flag 11+ item grocery orders for early Dasher dispatch
+
+Restrict new orders from batching if prep delay crosses threshold
+
+Create Grocery-Specific Prep Flows:
+
+Standardized bagging scripts for large orders
+
+Incentives for grocery staff to reduce prep lag
+
+📈 Expected Outcome:
+📉 Grocery ETA variance down by 20%
+
+📉 Grocery late-risk (45+ mins) drops from 6.4% → under 3%
+
+📈 Dasher pickup wait time improvement → +10% efficiency
+
+🕒 Timeline:
+3–4 weeks rollout via updated logistics & prep workflows
+
+
+⛅ 3. Weather-Aware Dynamic Incentives & Communication
+📊 Based On:
+Page 3 Rain Surge Multiplier: ETA increases by 1.68×
+
+Wind Speed Line Chart: ETA rises with wind (~4 min)
+
+Scatterplot: Weather stress leads to queue backlogs
+
+🚀 Strategy:
+Add weather-sensitive bonus logic:
+
+Trigger Rain Surge incentive when RAIN + PEAK_HOUR + SURGE active
+
+Bonus minimums tied to Rain + Wind conditions per market
+
+Enable Customer ETA Adjustments during extreme weather
+
+“Weather-adjusted ETA: 35 min instead of 30 min — thanks for your patience!”
+
+Proactive CX emails or in-app banners: “Due to current weather, orders may be delayed slightly.”
+
+📈 Expected Outcome:
+📉 CX complaints from rainy orders drop by 25–30%
+
+📉 Dashers opt out of shift drops due to poor weather
+
+📈 Increase in acceptance rate by 8–12% during mild storm windows
+
+🕒 Timeline:
+2 weeks to test bonus + comms triggers in weather-volatile markets
+
+
+🧠 4. Predictive Alerting for Operations Teams
+📊 Based On:
+Dasher Stress Bubble Chart
+
+ETA Volatility Card = 9.44 mins
+
+Late Risk Gauge
+
+🚀 Strategy:
+Trigger alerts when:
+
+DASHER_STRESS_INDEX > 8
+
+ETA_VOLATILITY > 10 mins
+
+Rain + Surge Active
+
+Embed alerts inside Ops Cockpit or Supervisor Mobile Tools
+
+Use alert logic to activate:
+
+Fleet Boosts
+
+Batch Holdback
+
+Customer ETA nudges
+
+📈 Expected Outcome:
+📉 Delayed deliveries cut by 18–20%
+
+📈 Supervisor task response latency drops by 40%
+
+📉 Operational incidents logged by support drop by 25%
+
+🕒 Timeline:
+2–3 weeks for MVP integration inside CX/ops dashboard
+
+
+📍 5. Urban Market Customization Playbooks
+📊 Based On:
+Surge Heatmap
+
+Top 10 Urban Markets + All 3 Pages
+
+🚀 Strategy:
+Build per-city playbooks using cluster analysis of:
+
+Surge timings
+
+ETA violations
+
+Grocery-to-restaurant ratio
+
+Weather volatility
+
+Example:
+
+LA: Evening Rain + Grocery volume → pre-position 15% more dashers
+
+NYC: Friday lunch → high restaurant volume = tighten packaging time
+
+Each city gets:
+
+SLA Tuning
+
+Weather rules
+
+Dasher incentive configs
+
+📈 Expected Outcome:
+📉 SLA breach reduction by ~25% per market
+
+📈 ETA prediction accuracy improvement from ~80% → ~88%
+
+📈 Local Ops Team NPS rises by 10–12 pts (reduced manual interventions)
+
+
+🕒 Timeline:
+1 week per city for configuration + review rollout (10 weeks for all)
+
+🧭 Final Strategy Rollout Phasing
+Phase	Scope	Cities	KPI Goal
+Week 1–2	Surge rebalancing pilot	LA, NYC, Chicago	Reduce surge ETA by 20%
+Week 3–4	Grocery dispatch + batching	Houston, Philly	Grocery SLA hit rate > 85%
+Week 4–6	Weather-based alerts & CX ETA nudges	Phoenix, Boston	Dash acceptance +8%
+Week 6–10	Full dashboard embed + playbooks	All 10 cities	SLA violations down 25%
+
+
+🧠 Stakeholder Summary
+This isn’t just a dashboard project. It’s a full operational intervention toolkit backed by 100K data points, weather modeling, and predictive ETA forecasting.
+
+Each chart powers a strategy. Each strategy saves money, improves satisfaction, and protects Dasher health.
+
+If adopted in sequence, DoorDash can expect:
+
+🚚 18–25% fewer late deliveries in 6–8 weeks
+
+📈 Up to 10-point increase in customer satisfaction (NPS)
+
+💰 Meaningful reduction in overcompensating surge payouts
+
+🧭 Improved dasher retention and market-specific execution control
+
+
+
+🎯 Conclusion
+This project turns reactive refund-heavy operations into a predictive, proactive delivery intelligence system.
+
+🔓 DoorDash can now:
+
+Pre-empt delivery spikes before they happen
+
+Tailor staffing and incentives by weather & city
+
+Reduce refunds, boost NPS, and protect Dashers
+
+
 
