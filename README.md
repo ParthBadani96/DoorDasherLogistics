@@ -185,6 +185,105 @@ print("✅ Generated and saved: simulated_doordash_100k_orders.csv with weather 
 ✅ Generated and saved: simulated_doordash_100k_orders.csv with weather data 🌦
 df_final = pd.read_csv(r'C:\Users\Parth Badani\Downloads\doordash_100k_dashboard_re
 
+
+Now moving into feature engineering for this dataset to Snowflake
+
+-- Step 1: Define base dataset with delay logic
+WITH base_data AS (
+    SELECT 
+        *,
+        -- Delay Buckets
+        CASE 
+            WHEN predicted_delivery_duration < 1200 THEN '<20m'
+            WHEN predicted_delivery_duration BETWEEN 1200 AND 1800 THEN '20–30m'
+            WHEN predicted_delivery_duration BETWEEN 1801 AND 2700 THEN '30–45m'
+            ELSE '45m+'
+        END AS delay_bucket,
+
+        -- Weather-impacted delay flag
+        CASE 
+            WHEN weather_main IN ('Rain', 'Snow', 'Mist') AND predicted_delivery_duration > 1800 THEN 1
+            ELSE 0
+        END AS weather_delay_flag
+    FROM simulated_doordash_orders
+),
+
+-- Step 2: Market-hour level surge score
+market_hourly_surge_score AS (
+    SELECT 
+        market, hour_of_day,
+        AVG(surge_flag) AS avg_surge_pct,
+        RANK() OVER (PARTITION BY market ORDER BY AVG(surge_flag) DESC) AS surge_rank_within_market
+    FROM base_data
+    GROUP BY market, hour_of_day
+),
+
+-- Step 3: Store type delay risk
+store_type_delay_risk AS (
+    SELECT 
+        store_type, hour_of_day, day_of_week,
+        ROUND(AVG(predicted_delivery_duration)/60.0, 2) AS avg_eta_minutes,
+        RANK() OVER (PARTITION BY store_type ORDER BY AVG(predicted_delivery_duration) DESC) AS risk_rank
+    FROM base_data
+    GROUP BY store_type, hour_of_day, day_of_week
+),
+
+-- Step 4: Grocery delay penalty estimate
+grocery_delay_penalty_calc AS (
+    SELECT
+        created_at, market, store_type, total_items,
+        CASE 
+            WHEN store_type = 'grocery' THEN ROUND(0.75 * total_items, 2)
+            ELSE 0
+        END AS grocery_delay_penalty_min
+    FROM base_data
+),
+
+-- Step 5: Final join + engineered view
+final_enriched AS (
+    SELECT 
+        b.*,
+        m.avg_surge_pct,
+        m.surge_rank_within_market,
+        s.avg_eta_minutes AS store_type_hour_eta,
+        s.risk_rank AS store_type_delay_risk_rank,
+        g.grocery_delay_penalty_min
+    FROM base_data b
+    LEFT JOIN market_hourly_surge_score m
+        ON b.market = m.market AND b.hour_of_day = m.hour_of_day
+    LEFT JOIN store_type_delay_risk s
+        ON b.store_type = s.store_type AND b.hour_of_day = s.hour_of_day AND b.day_of_week = s.day_of_week
+    LEFT JOIN grocery_delay_penalty_calc g
+        ON b.created_at = g.created_at AND b.market = g.market AND b.store_type = g.store_type AND b.total_items = g.total_items
+)
+
+-- FINAL OUTPUT: Replace with CREATE TABLE or CREATE OR REPLACE VIEW
+CREATE OR REPLACE VIEW v_doordash_logistics_featured AS
+SELECT * FROM final_enriched;
+
+
+✅ Output View: v_doordash_logistics_featured
+You now get a fully enriched view with:
+
+Column	Description
+delay_bucket	ETA group for visualization
+weather_delay_flag	Binary: weather-induced delay
+avg_surge_pct	Market × hour level surge intensity
+surge_rank_within_market	Rank of surge hours per city
+store_type_delay_risk_rank	ETA-based delay risk by store type/hour/day
+grocery_delay_penalty_min	Predicted additional delay for groceries
+
+
+✅ Confirmed Features That Support Our Business Questions
+Business Question	Key Features Supporting It
+1. When and where do delivery delays peak?	delay_bucket, hour_of_day, market, avg_surge_pct, surge_rank_within_market
+2. Does weather affect delivery performance or dasher stress?	weather_main, temp_c, humidity, wind_speed, weather_delay_flag, predicted_delivery_duration, dasher_stress_index
+3. Which store types are most delay-prone during peak hours?	store_type, is_peak_hour, store_type_hour_eta, store_type_delay_risk_rank
+4. Can we predict delivery stress from observable metrics in advance?	dasher_stress_index, busy_dashers_ratio, dasher_to_order_ratio, surge_flag, avg_surge_pct
+5. How do surge flags correlate with predicted delivery time?	predicted_delivery_duration, surge_flag, delay_bucket, weather_main, is_peak_hour, market, hour_of_day
+
+Now importing the feature engineered dataset back into Python for running statistical tests and data modeling
+
 from scipy.stats import ttest_ind
 peak_eta = df_final[df_final["IS_PEAK_HOUR"] == 1]["PREDICTED_DELIVERY_DURATION"]
 nonpeak_eta = df_final[df_final["IS_PEAK_HOUR"] == 0]["PREDICTED_DELIVERY_DURATION"
